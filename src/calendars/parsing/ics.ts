@@ -1,17 +1,36 @@
 import ical from "ical.js";
 import { OFCEvent, validateEvent } from "../../types";
-import { DateTime } from "luxon";
+import { DateTime, IANAZone } from "luxon";
 import { rrulestr } from "rrule";
 
 function getDate(t: ical.Time): string {
-    return DateTime.fromSeconds(t.toUnixTime(), { zone: "UTC" }).toISODate();
+    return DateTime.fromSeconds(t.toUnixTime(), {
+        zone: "Asia/Seoul",
+    }).toISODate();
+}
+
+function getDateL(tstr: string, tzone: string): string {
+    const t = DateTime.fromISO(tstr, { zone: new IANAZone(tzone) });
+    return t.setZone(new IANAZone("Asia/Seoul")).toISODate();
 }
 
 function getTime(t: ical.Time): string {
     if (t.isDate) {
         return "00:00";
     }
-    return DateTime.fromSeconds(t.toUnixTime(), { zone: "UTC" }).toISOTime({
+    return DateTime.fromSeconds(t.toUnixTime(), {
+        zone: "Asia/Seoul",
+    }).toISOTime({
+        includeOffset: false,
+        includePrefix: false,
+        suppressMilliseconds: true,
+        suppressSeconds: true,
+    });
+}
+
+function getTimeL(tstr: string, tzone: string): string {
+    const t = DateTime.fromISO(tstr, { zone: new IANAZone(tzone) });
+    return t.setZone(new IANAZone("Asia/Seoul")).toISOTime({
         includeOffset: false,
         includePrefix: false,
         suppressMilliseconds: true,
@@ -45,35 +64,32 @@ function icsToOFC(input: ical.Event): OFCEvent {
                 // so recurring events with exclusions that happen more than once per day are not supported.
                 return getDate(exdate);
             });
-
+        if (!allDay) {
+        }
         return {
             type: "rrule",
             title: input.summary,
             id: `ics::${input.uid}::${getDate(input.startDate)}::recurring`,
             rrule: rrule.toString(),
             skipDates: exdates,
-            startDate: getDate(
-                input.startDate.convertToZone(ical.Timezone.utcTimezone)
-            ),
+            startDate: getDate(input.startDate),
             ...(allDay
                 ? { allDay: true }
                 : {
                       allDay: false,
-                      startTime: getTime(
-                          input.startDate.convertToZone(
-                              ical.Timezone.utcTimezone
-                          )
-                      ),
-                      endTime: getTime(
-                          input.endDate.convertToZone(ical.Timezone.utcTimezone)
-                      ),
+                      startTime: getTime(input.startDate),
+                      endTime: getTime(input.endDate),
                   }),
         };
     } else {
-        const date = getDate(input.startDate);
+        // if (!ical.TimezoneService.has(input.startDate.timezone)) {
+        const date = getDateL(
+            input.startDate.toString(),
+            input.startDate.timezone
+        );
         const endDate =
             specifiesEnd(input) && input.endDate
-                ? getDate(input.endDate)
+                ? getDateL(input.endDate.toString(), input.endDate.timezone)
                 : undefined;
         const allDay = input.startDate.isDate;
         return {
@@ -86,8 +102,14 @@ function icsToOFC(input: ical.Event): OFCEvent {
                 ? { allDay: true }
                 : {
                       allDay: false,
-                      startTime: getTime(input.startDate),
-                      endTime: getTime(input.endDate),
+                      startTime: getTimeL(
+                          input.startDate.toString(),
+                          input.startDate.timezone
+                      ),
+                      endTime: getTimeL(
+                          input.endDate.toString(),
+                          input.endDate.timezone
+                      ),
                   }),
         };
     }
@@ -100,6 +122,13 @@ export function getEventsFromICS(text: string): OFCEvent[] {
     // TODO: Timezone support
     // const tzc = component.getAllSubcomponents("vtimezone");
     // const tz = new ical.Timezone(tzc[0]);
+    const timezones: ical.Timezone[] = component
+        .getAllSubcomponents("vtimezone")
+        .map((vtimezone) => {
+            const timezone = new ical.Timezone(vtimezone);
+            ical.TimezoneService.register(timezone.tzid, timezone);
+            return timezone;
+        });
 
     const events: ical.Event[] = component
         .getAllSubcomponents("vevent")

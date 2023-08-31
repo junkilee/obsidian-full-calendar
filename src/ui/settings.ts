@@ -25,6 +25,7 @@ export interface FullCalendarSettings {
         desktop: string;
         mobile: string;
     };
+    current_gmt: string;
     timeFormat24h: boolean;
 }
 
@@ -36,6 +37,7 @@ export const DEFAULT_SETTINGS: FullCalendarSettings = {
         desktop: "timeGridWeek",
         mobile: "timeGrid3Days",
     },
+    current_gmt: "India",
     timeFormat24h: false,
 };
 
@@ -48,6 +50,34 @@ const WEEKDAYS = [
     "Friday",
     "Saturday",
 ];
+
+const GMT_OPTIONS = {
+    Zulu: "GMT+00 Greenwich Mean Time (GMT)",
+    Alpha: "GMT+01 Central European Time (CET)",
+    Bravo: "GMT+02 Eastern European Time (EET)",
+    Charlie: "GMT+03 Moscow Time (MSK)",
+    Delta: "GMT+04 Armenia Time (AMT)",
+    Echo: "GMT+05 Pakistan Standard Time (PKT)",
+    Foxtrot: "GMT+06 Omsk Time (OMSK)",
+    Golf: "GMT+07 Kranoyask Time (KRAT)",
+    Hotel: "GMT+08 China Standard Time (CST)",
+    India: "GMT+09 Korea Standard Time (KST)",
+    Kilo: "GMT+10 Eastern Australia Standard Time (AEST)",
+    Lima: "GMT+11 Sakhalin Time (SAKT)",
+    Mike: "GMT+12 New Zealand Standard Time (NZST)",
+    November: "GMT-01 West Africa Time (WAT)",
+    Oscar: "GMT-02 Azores Time (AT)",
+    Papa: "GMT-03 Argentina Time (ART)",
+    Quebec: "GMT-04 Atlantic Standard Time (AST, EDT)",
+    Romeo: "GMT-05 Eastern Standard Time (EST)",
+    Sierra: "GMT-06 Central Standard Time (CST)",
+    Tango: "GMT-07 Mountain Standard Time (MST, PDT)",
+    Uniform: "GMT-08 Pacific Standard Time (PST)",
+    Victor: "GMT-09 Alaska Standard Time (AKST)",
+    Whiskey: "GMT-10 Hawaii Standard Time (HST)",
+    Xray: "GMT-11 Nome Time (NT)",
+    Yankee: "GMT-12 International Date Line West (IDLW)",
+};
 
 const INITIAL_VIEW_OPTIONS = {
     DESKTOP: {
@@ -177,6 +207,20 @@ export class FullCalendarSettingTab extends PluginSettingTab {
         containerEl.empty();
 
         containerEl.createEl("h2", { text: "Calendar Preferences" });
+        new Setting(containerEl)
+            .setName("Current Time Zone")
+            .setDesc("Choose the GMT offset for the current time zone.")
+            .addDropdown((dropdown) => {
+                Object.entries(GMT_OPTIONS).forEach(([value, display]) => {
+                    dropdown.addOption(value, display);
+                });
+                dropdown.setValue(this.plugin.settings.current_gmt);
+                dropdown.onChange(async (current_gmt) => {
+                    this.plugin.settings.current_gmt = current_gmt;
+                    await this.plugin.saveSettings();
+                });
+            });
+
         new Setting(containerEl)
             .setName("Desktop Initial View")
             .setDesc("Choose the initial view range on desktop devices.")

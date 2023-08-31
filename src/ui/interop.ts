@@ -13,6 +13,9 @@ const parseTime = (time: string): Duration | null => {
     if (parsed.invalidReason) {
         parsed = DateTime.fromFormat(time, "HH:mm");
     }
+    if (parsed.invalidReason) {
+        parsed = DateTime.fromFormat(time, "HH:mm:ss");
+    }
 
     if (parsed.invalidReason) {
         console.error(
@@ -60,7 +63,7 @@ const combineDateTimeStrings = (date: string, time: string): string | null => {
     const parsedDate = DateTime.fromISO(date);
     if (parsedDate.invalidReason) {
         console.error(
-            `FC: Error parsing time string '${date}': ${parsedDate.invalidReason}`
+            `FC: Error parsing date string '${date}': ${parsedDate.invalidReason}`
         );
         return null;
     }
