@@ -156,10 +156,13 @@ export function toEventInput(
                 // Can't do date arithmetic because timezone might change for different exdates due to DST.
                 // RRule only has one dtstart that doesn't know about DST/timezone changes.
                 // Therefore, just concatenate the date for this exdate and the start time for the event together.
-                const date = DateTime.fromISO(d).toISODate();
-                const time = dtstart.toJSDate().toISOString().split("T")[1];
-
-                return `${date}T${time}`;
+                // const date = DateTime.fromISO(d).toUTC().toISODate();
+                // const time = dtstart.toJSDate().toISOString().split("T")[1];
+                //const date = DateTime.fromISO(d).toISODate();
+                //const time = dtstart.toISOTime().split(".")[0];
+                const datetime =
+                    DateTime.fromISO(d).toISODate() + "T" + dtstart.toISOTime();
+                return datetime;
             })
             .flatMap((d) => (d ? d : []));
 

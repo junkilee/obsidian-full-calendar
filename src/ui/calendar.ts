@@ -19,16 +19,16 @@ import iCalendarPlugin from "@fullcalendar/icalendar";
 // There is an issue with FullCalendar RRule support around DST boundaries which is fixed by this monkeypatch:
 // https://github.com/fullcalendar/fullcalendar/issues/5273#issuecomment-1360459342
 rrulePlugin.recurringTypes[0].expand = function (errd, fr, de) {
+    // const hours = errd.rruleSet._dtstart.getUTCHours();
     const hours = errd.rruleSet._dtstart.getHours();
     // var tt = errd.rruleSet
     //     .between(de.toDate(fr.start), de.toDate(fr.end), true);
     return (
         errd.rruleSet
             .between(de.toDate(fr.start), de.toDate(fr.end), true)
-            // .map((d: Date) => {
-            //     d.setHours(d.getHours() - 15);
+            // .map((d : Date) =>{
             //     return d;
-            // });
+            // })
             .map((d: Date) => {
                 return new Date(
                     Date.UTC(
@@ -40,6 +40,19 @@ rrulePlugin.recurringTypes[0].expand = function (errd, fr, de) {
                     )
                 );
             })
+        // .map((d: Date) => {
+        //     d.setHours(d.getHours() - 15);
+        //     return d;
+        // });
+        // .map((d: Date) => {
+        //     return new Date(
+        //         d.getUTCFullYear(),
+        //         d.getUTCMonth(),
+        //         d.getUTCDate(),
+        //         hours,
+        //         d.getUTCMinutes()
+        //     );
+        // })
     );
 };
 

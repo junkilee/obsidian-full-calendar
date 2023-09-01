@@ -4,6 +4,7 @@ import { DateTime, IANAZone } from "luxon";
 import { rrulestr } from "rrule";
 
 const DEFAULT_ZONE = "Asia/Seoul";
+const WEEK_DAYS = ["MO", "TU", "WE", "TH", "FR", "SA", "SU"];
 
 function getDate(t: ical.Time): string {
     return DateTime.fromSeconds(t.toUnixTime(), {
@@ -58,9 +59,6 @@ function specifiesEnd(iCalEvent: ical.Event) {
 
 function icsToOFC(input: ical.Event): OFCEvent {
     if (input.isRecurring()) {
-        const rrule = rrulestr(
-            input.component.getFirstProperty("rrule").getFirstValue().toString()
-        );
         const allDay = input.startDate.isDate;
         const exdates = input.component
             .getAllProperties("exdate")
@@ -72,9 +70,22 @@ function icsToOFC(input: ical.Event): OFCEvent {
             });
         if (!allDay) {
         }
-        // console.log(input.summary);
-        // console.log(rrule);
-        // console.log(rrule.toString());
+        var day_diff =
+            input.startDate.toJSDate().getUTCDay() -
+            input.startDate.toJSDate().getDay();
+
+        if (day_diff != 0) {
+            var fv = input.component.getFirstProperty("rrule").getFirstValue();
+            if (fv.parts["BYDAY"]) {
+                fv.parts["BYDAY"] = fv.parts["BYDAY"].map((p: string) => {
+                    var wi = (WEEK_DAYS.indexOf(p) + day_diff + 7) % 7;
+                    return WEEK_DAYS[wi];
+                });
+            }
+        }
+        const rrule = rrulestr(
+            input.component.getFirstProperty("rrule").getFirstValue().toString()
+        );
         return {
             type: "rrule",
             title: input.summary,
