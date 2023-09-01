@@ -147,6 +147,9 @@ export function toEventInput(
         if (dtstart === null) {
             return null;
         }
+        // console.log(frontmatter.startDate);
+        // console.log(dtstart.toString());
+        // console.log(dtstart.toJSDate());
         // NOTE: how exdates are handled does not support events which recur more than once per day.
         const exdate = frontmatter.skipDates
             .map((d) => {
@@ -171,6 +174,8 @@ export function toEventInput(
         };
 
         if (!frontmatter.allDay) {
+            // console.log(frontmatter.startTime);
+            // console.log(frontmatter.endTime);
             const startTime = parseTime(frontmatter.startTime);
             if (startTime && frontmatter.endTime) {
                 const endTime = parseTime(frontmatter.endTime);

@@ -3,15 +3,19 @@ import { OFCEvent, validateEvent } from "../../types";
 import { DateTime, IANAZone } from "luxon";
 import { rrulestr } from "rrule";
 
+const DEFAULT_ZONE = "Asia/Seoul";
+
 function getDate(t: ical.Time): string {
     return DateTime.fromSeconds(t.toUnixTime(), {
-        zone: "Asia/Seoul",
+        zone: DEFAULT_ZONE,
     }).toISODate();
 }
 
 function getDateL(tstr: string, tzone: string): string {
+    if (!tzone) tzone = DEFAULT_ZONE;
+    if (tzone == "Z") tzone = "UTC";
     const t = DateTime.fromISO(tstr, { zone: new IANAZone(tzone) });
-    return t.setZone(new IANAZone("Asia/Seoul")).toISODate();
+    return t.setZone(new IANAZone(DEFAULT_ZONE)).toISODate();
 }
 
 function getTime(t: ical.Time): string {
@@ -19,7 +23,7 @@ function getTime(t: ical.Time): string {
         return "00:00";
     }
     return DateTime.fromSeconds(t.toUnixTime(), {
-        zone: "Asia/Seoul",
+        zone: DEFAULT_ZONE,
     }).toISOTime({
         includeOffset: false,
         includePrefix: false,
@@ -29,8 +33,10 @@ function getTime(t: ical.Time): string {
 }
 
 function getTimeL(tstr: string, tzone: string): string {
+    if (!tzone) tzone = DEFAULT_ZONE;
+    if (tzone == "Z") tzone = "UTC";
     const t = DateTime.fromISO(tstr, { zone: new IANAZone(tzone) });
-    return t.setZone(new IANAZone("Asia/Seoul")).toISOTime({
+    return t.setZone(new IANAZone(DEFAULT_ZONE)).toISOTime({
         includeOffset: false,
         includePrefix: false,
         suppressMilliseconds: true,
@@ -62,27 +68,38 @@ function icsToOFC(input: ical.Event): OFCEvent {
                 const exdate = exdateProp.getFirstValue();
                 // NOTE: We only store the date from an exdate and recreate the full datetime exdate later,
                 // so recurring events with exclusions that happen more than once per day are not supported.
-                return getDate(exdate);
+                return getDateL(exdate.toString(), exdate.timezone);
             });
         if (!allDay) {
         }
+        // console.log(input.summary);
+        // console.log(rrule);
+        // console.log(rrule.toString());
         return {
             type: "rrule",
             title: input.summary,
             id: `ics::${input.uid}::${getDate(input.startDate)}::recurring`,
             rrule: rrule.toString(),
             skipDates: exdates,
-            startDate: getDate(input.startDate),
+            startDate: getDateL(
+                input.startDate.toString(),
+                input.startDate.timezone
+            ),
             ...(allDay
                 ? { allDay: true }
                 : {
                       allDay: false,
-                      startTime: getTime(input.startDate),
-                      endTime: getTime(input.endDate),
+                      startTime: getTimeL(
+                          input.startDate.toString(),
+                          input.startDate.timezone
+                      ),
+                      endTime: getTimeL(
+                          input.endDate.toString(),
+                          input.startDate.timezone
+                      ),
                   }),
         };
     } else {
-        // if (!ical.TimezoneService.has(input.startDate.timezone)) {
         const date = getDateL(
             input.startDate.toString(),
             input.startDate.timezone
@@ -108,7 +125,7 @@ function icsToOFC(input: ical.Event): OFCEvent {
                       ),
                       endTime: getTimeL(
                           input.endDate.toString(),
-                          input.endDate.timezone
+                          input.startDate.timezone
                       ),
                   }),
         };

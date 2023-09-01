@@ -20,19 +20,27 @@ import iCalendarPlugin from "@fullcalendar/icalendar";
 // https://github.com/fullcalendar/fullcalendar/issues/5273#issuecomment-1360459342
 rrulePlugin.recurringTypes[0].expand = function (errd, fr, de) {
     const hours = errd.rruleSet._dtstart.getHours();
-    return errd.rruleSet
-        .between(de.toDate(fr.start), de.toDate(fr.end), true)
-        .map((d: Date) => {
-            return new Date(
-                Date.UTC(
-                    d.getFullYear(),
-                    d.getMonth(),
-                    d.getDate(),
-                    hours,
-                    d.getMinutes()
-                )
-            );
-        });
+    // var tt = errd.rruleSet
+    //     .between(de.toDate(fr.start), de.toDate(fr.end), true);
+    return (
+        errd.rruleSet
+            .between(de.toDate(fr.start), de.toDate(fr.end), true)
+            // .map((d: Date) => {
+            //     d.setHours(d.getHours() - 15);
+            //     return d;
+            // });
+            .map((d: Date) => {
+                return new Date(
+                    Date.UTC(
+                        d.getFullYear(),
+                        d.getMonth(),
+                        d.getDate(),
+                        hours,
+                        d.getMinutes()
+                    )
+                );
+            })
+    );
 };
 
 interface ExtraRenderProps {
@@ -88,7 +96,9 @@ export function renderCalendar(
             }
         });
 
+    console.log(eventSources);
     const cal = new Calendar(containerEl, {
+        timeZone: "local",
         plugins: [
             // View plugins
             dayGridPlugin,

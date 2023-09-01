@@ -1,10 +1,9 @@
 ---
 name: Bug report
 about: Create a report to help us improve
-title: ''
+title: ""
 labels: bug
-assignees: ''
-
+assignees: ""
 ---
 
 **Describe the bug**
@@ -12,6 +11,7 @@ A clear and concise description of what the bug is.
 
 **To Reproduce**
 Steps to reproduce the behavior:
+
 1. Go to '...'
 2. Click on '....'
 3. Scroll down to '....'
@@ -27,8 +27,9 @@ If applicable, add screenshots to help explain your problem.
 Go to `View->Toggle Developer Tools` and open up the JavaScript console, reproduce your bug, and copy/paste any logs you see there.
 
 **Device info (please complete the following information):**
- - OS: [e.g. iOS]
- - Plugin Version [e.g. `0.1.3`]
+
+-   OS: [e.g. iOS]
+-   Plugin Version [e.g. `0.1.3`]
 
 **Additional context**
 Add any other context about the problem here.
